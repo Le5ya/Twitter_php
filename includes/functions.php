@@ -122,12 +122,42 @@ function add_post($text, $image) {
     $text = mb_substr($text, 0, 250) . ' ...';
   }
   $user_id = $_SESSION['user']['id'];
-  $sql = "INSERT INTO `posts` (`id`, `user_id`, `text`, `image`) VALUE (NULL, $user, $user_id, 
-  '$text', '$image', CURRENT_TIMESTAMP);";
+  $sql = "INSERT INTO `posts` (`id`, `user_id`, `text`, `image`) VALUE (NULL,  $user_id, 
+  '$text', '$image');";
   return db_query($sql, true); 
 }
 function delete_post($id) {
   $user_id = $_SESSION['user']['id'];
   return db_query("DELETE_FROM `posts` WHERE `posts`.`id` = $id AND `user_id` = $user_id", 
     true);
+}
+function get_likes_count($post_id) {
+  if(empty($post_id)) return 0;
+  return db_query("SELECT COUNT(*) FROM `likes` WHERE `post_id` = $post_id;")->fetchColumn();
+}
+function is_post_liked($post_id) {
+  $user_id = $_SESSION['user']['id'];
+  if(empty($post_id)) return false;
+
+  return db_query("SELECT * FROM `likes` WHERE `post_id` = $post_id AND `user_id` = $user_id;")->rowCount() > 0;
+}
+function add_like($post_id) {
+  $user_id = $_SESSION['user']['id'];
+  if(empty($post_id)) return false;
+
+  $sql = "INSERT INTO `likes` (`post_id`, `user_id`) VALUES ($post_id, $user_id);";
+  return db_query($sql, true); 
+}
+
+function delete_like($post_id) {
+  $user_id = $_SESSION['user']['id'];
+  if(empty($post_id)) return false;
+
+  return db_query("DELETE FROM `likes` WHERE `post_id` = $post_id AND `user_id` = $user_id;", true);
+}
+function get_liked_posts() {
+  $user_id = $_SESSION['user']['id'];
+
+  $sql = "SELECT posts.*, users.name, users.login, users.avatar FROM `likes` JOIN `posts` ON posts.id = likes.post_id JOIN `users` ON users.id = posts.user_id WHERE likes.user_id = $user_id;";
+  return db_query($sql)->fetchAll();
 }
